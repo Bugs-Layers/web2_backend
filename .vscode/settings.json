@@ -1,0 +1,12 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "driver": "SQLite",
+      "name": "nftree-test-db",
+      "group": "nftree",
+      "database": "${workspaceFolder:h4b-backend}/test.db"
+    }
+  ],
+  "sqltools.useNodeRuntime": true
+}

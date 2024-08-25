@@ -1,0 +1,4 @@
+images/
+__pycache__/
+tree-not-tree.keras
+test.db

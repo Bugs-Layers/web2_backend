@@ -1,0 +1,39 @@
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  bio TEXT,
+  wallet TEXT NOT NULL,
+  created_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at INTEGER NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS trees (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  location TEXT NOT NULL,
+  user_id INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users (id)
+);
+CREATE TABLE IF NOT EXISTS tree_imgs (
+  id INTEGER PRIMARY KEY,
+  tree_id INTEGER NOT NULL,
+  img TEXT NOT NULL,
+  upvotes INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  FOREIGN KEY (tree_id) REFERENCES trees (id),
+  FOREIGN KEY (user_id) REFERENCES users (id)
+);
+CREATE TABLE IF NOT EXISTS posts (
+  id INTEGER PRIMARY KEY,
+  content TEXT NOT NULL,
+  user_id INTEGER NOT NULL,
+  tree_id INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users (id),
+  FOREIGN KEY (tree_id) REFERENCES trees (id)
+);
