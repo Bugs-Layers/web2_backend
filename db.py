@@ -1,24 +1,30 @@
-import sqlite3
+import os
+import libsql_experimental as libsql
 
 from pydantic import BaseModel
 
+url = os.getenv("TURSO_DATABASE_URL")
+auth_token = os.getenv("TURSO_AUTH_TOKEN")
+
+conn = libsql.connect("test.db", sync_url=url, auth_token=auth_token)
+conn.sync()
+
 
 def init_db():
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute(
+    conn.execute(
         "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY,name TEXT NOT NULL,bio TEXT,wallet TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"
     )
-    cursor.execute(
+    conn.execute(
         "CREATE TABLE IF NOT EXISTS trees (id INTEGER PRIMARY KEY,name TEXT NOT NULL,location TEXT NOT NULL,user_id INTEGER NOT NULL,type TEXT NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY (user_id) REFERENCES users (id))"
     )
-    cursor.execute(
+    conn.execute(
         "CREATE TABLE IF NOT EXISTS tree_imgs (  id INTEGER PRIMARY KEY,  tree_id INTEGER NOT NULL,  img TEXT NOT NULL,  upvotes INTEGER NOT NULL,  user_id INTEGER NOT NULL,  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,  FOREIGN KEY (tree_id) REFERENCES trees (id),  FOREIGN KEY (user_id) REFERENCES users (id))"
     )
-    cursor.execute(
+    conn.execute(
         "CREATE TABLE IF NOT EXISTS posts (id INTEGER PRIMARY KEY,content TEXT NOT NULL,user_id INTEGER NOT NULL,tree_id INTEGER NOT NULL,created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,FOREIGN KEY (user_id) REFERENCES users (id),FOREIGN KEY (tree_id) REFERENCES trees (id))"
     )
     conn.commit()
+    conn.sync()
 
 
 class User(BaseModel):
@@ -93,9 +99,7 @@ class Post(BaseModel):
 
 
 def insert_user(user: User):
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute(
+    conn.execute(
         "INSERT INTO users (name, bio, wallet) VALUES (?, ?, ?)",
         (
             user.name,
@@ -104,13 +108,11 @@ def insert_user(user: User):
         ),
     )
     conn.commit()
-    conn.close()
+    conn.sync()
 
 
 def insert_tree(tree: Tree):
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute(
+    conn.execute(
         "INSERT INTO trees (name, location, user_id, type) VALUES (?, ?, ?, ?)",
         (
             tree.name,
@@ -119,16 +121,14 @@ def insert_tree(tree: Tree):
             tree.type,
         ),
     )
-    id = cursor.lastrowid
+    id = conn.lastrowid
     conn.commit()
-    conn.close()
+    conn.sync()
     return id
 
 
 def insert_post(post: Post):
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute(
+    conn.execute(
         "INSERT INTO posts (content, user_id, tree_id) VALUES (?, ?, ?)",
         (
             post.content,
@@ -137,87 +137,64 @@ def insert_post(post: Post):
         ),
     )
     conn.commit()
-    conn.close()
+    conn.sync()
 
 
 def get_user_by_name(name: str):
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE name=?", (name,))
-    data = cursor.fetchone()
-    conn.close()
+
+    data = conn.execute("SELECT * FROM users WHERE name=?", (name,)).fetchone()
     return User.get_obj(data)
 
 
 def get_user_by_id(id: int):
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE id=?", (id,))
-    data = cursor.fetchone()
-    conn.close()
+
+    data = conn.execute("SELECT * FROM users WHERE id=?", (id,)).fetchone()
     return User.get_obj(data)
 
 
 def get_user_by_wallet(wallet: str):
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE wallet=?", (wallet,))
-    data = cursor.fetchone()
-    conn.close()
+
+    data = conn.execute("SELECT * FROM users WHERE wallet=?", (wallet,)).fetchone()
     if not data:
         raise Exception("User not found")
     return User.get_obj(data)
 
 
 def get_tree_by_id(id: int):
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM trees WHERE id=?", (id,))
-    data = cursor.fetchone()
-    conn.close()
+
+    data = conn.execute("SELECT * FROM trees WHERE id=?", (id,)).fetchone()
     return Tree.get_obj(data)
 
 
 def get_tree_by_user_id(user_id: int):
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM trees WHERE user_id=?", (user_id,))
-    data = cursor.fetchall()
-    conn.close()
+
+    data = conn.execute("SELECT * FROM trees WHERE user_id=?", (user_id,)).fetchall()
     return [Tree.get_obj(row) for row in data]
 
 
 def get_posts_by_user_id(user_id: int):
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM posts WHERE user_id=? ORDER BY created_at DESC", (user_id,))
-    data = cursor.fetchall()
-    conn.close()
+
+    data = conn.execute(
+        "SELECT * FROM posts WHERE user_id=? ORDER BY created_at DESC", (user_id,)
+    ).fetchall()
     return [Post.get_obj(row) for row in data]
 
 
 def get_posts_by_tree_id(tree_id: int):
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM posts WHERE tree_id=?", (tree_id,))
-    data = cursor.fetchall()
-    conn.close()
+
+    data = conn.execute("SELECT * FROM posts WHERE tree_id=?", (tree_id,)).fetchall()
     return [Post.get_obj(row) for row in data]
 
 
 def get_all_posts():
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT posts.*, users.name FROM posts JOIN users ON posts.user_id = users.id ORDER BY posts.created_at DESC")
-    data = cursor.fetchall()
-    conn.close()
+
+    data = conn.execute(
+        "SELECT posts.*, users.name FROM posts JOIN users ON posts.user_id = users.id ORDER BY posts.created_at DESC"
+    ).fetchall()
     return [Post.get_obj(row) for row in data]
 
 
 def get_all_trees():
-    conn = sqlite3.connect("test.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM trees")
-    data = cursor.fetchall()
-    conn.close()
+
+    data = conn.execute("SELECT * FROM trees").fetchall()
     return [Tree.get_obj(row) for row in data]
