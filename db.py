@@ -6,7 +6,7 @@ from pydantic import BaseModel
 url = os.getenv("TURSO_DATABASE_URL")
 auth_token = os.getenv("TURSO_AUTH_TOKEN")
 
-conn = libsql.connect("test.db", sync_url=url, auth_token=auth_token)
+conn = libsql.connect(":memory:", sync_url=url, auth_token=auth_token)
 conn.sync()
 
 

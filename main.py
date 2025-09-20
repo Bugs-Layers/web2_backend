@@ -1,5 +1,6 @@
 import random
 import string
+from workers import WorkerEntrypoint
 from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -21,6 +22,15 @@ from db import (
     insert_tree,
     insert_user,
 )
+
+class Default(WorkerEntrypoint):
+    async def fetch(self, request):
+        import asgi
+
+        return await asgi.fetch(app, request.js_object, self.env)
+
+
+
 
 app = FastAPI()
 

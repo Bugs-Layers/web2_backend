@@ -1,0 +1,7 @@
+name = "fastapi-worker"
+main = "src/worker.py"
+compatibility_flags = ["python_workers"]
+compatibility_date = "2025-08-14"
+
+[vars]
+TURSO_DATABASE_URL = "libsql://nftree-db-karmakarmeghdip.aws-ap-south-1.turso.io"
