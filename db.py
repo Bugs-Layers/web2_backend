@@ -1,5 +1,5 @@
 import os
-import libsql_experimental as libsql
+import libsql as libsql
 
 from pydantic import BaseModel
 

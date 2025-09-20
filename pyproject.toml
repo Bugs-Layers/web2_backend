@@ -1,16 +1,12 @@
-[tool.poetry]
-name = "h4b-backend"
+[project]
+name = "web2-backend"
 version = "0.1.0"
-description = ""
-authors = ["karmakarmeghdip <karmakarmeghdip@gmail.com>"]
+description = "Add your description here"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.12"
-fastapi = {extras = ["standard"], version = "^0.112.1"}
-libsql-experimental = "^0.0.40"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.116.2",
+    "libsql>=0.1.11",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.36.0",
+]
